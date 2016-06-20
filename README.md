@@ -23,7 +23,7 @@ You will need all of the following in order to complete this lab:
 
 ## <a name="deploy-application"></a>Step 1: Deploy a single host application
 
-
+If you would like to skip using a Dockerfile and jump straight deploying on a cluster then go straight to Step 2.0.
 
 In this step you will deploy a simple application that runs on a single Docker host. In order to do that, you will complete the following:
 
@@ -33,7 +33,7 @@ In this step you will deploy a simple application that runs on a single Docker h
 - Push the image to Docker Hub
 
 
-The application you will deploy is the 'cats' application. It is a simple 1-container application that displays random pictures of cats, because why not!! It is a flask application written in Python that pulls the images from public URLs.
+The application you will deploy is the `cats` application. It is a simple 1-container application that displays random pictures of cats, because why not!! It is a flask application written in Python that pulls the images from public URLs.
 
 ### Step 1.1 - Log into VMs and verify that Docker is running
 
