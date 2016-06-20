@@ -19,7 +19,7 @@ You will complete the following steps in this lab:
 You will need all of the following in order to complete this lab:
 - Three nodes running Docker v1.12.x. Each VM will be referenced as **v112node0**, **v112node1**, and **v112node2**.
 - A Docker ID. Creating a Docker ID is free, and allows you to push and pull images from Docker Hub. [This link](https://docs.docker.com/mac/step_five/) describes how to create a Docker ID (you only need to complete the procedure up to step 2.3).
-- Verify the Docker version that is currently running. 
+
 
 ## <a name="deploy-application"></a>Step 1: Deploy a single host application
 
@@ -32,15 +32,15 @@ In this step you will deploy a simple application that runs on a single Docker h
 - Push the image to Docker Hub
 - Run the app
 
-The application you will deploy is the **CatNip** application. It is a simple 1-container application that displays random pictures of cats, because why not! It is a flask written in Python that gets the cat images from a repository on the web and then displays them.
+The application you will deploy is the 'cats' application. It is a simple 1-container application that displays random pictures of cats, because why not! It is a flask written in Python that pulls the images from public URLs.
 
 ### Step 1.1 - Log into VMs and verify that Docker is running
 
-1. SSH to your __v112node0__ with the username of "**labuser**"
+1. SSH to your __v112node0__ with the username of 'labuser'
 
    The command to SSH into **v112node0** will look something like the following:
 
-   ```
+   ```bash
    ssh labuser@<public-dns-of-v112node0>
    ```
 You will be asked for a password. The password is in the email with the DNS names of the lab VMs.
@@ -58,59 +58,60 @@ Welcome to Ubuntu 14.04.4 LTS (GNU/Linux 4.2.0-23-generic x86_64)
 
 2. Verify that Docker is running. This lab is based on a pre-release version of Docker Engine 1.12 so that we can show you the latest Swarm features. We are running version `1.12.0-rc1` on these VMs.
 
-```bash
-labuser@v112node0:~$ docker version
-Client:
- Version:      1.12.0-rc1
- API version:  1.24
- Go version:   go1.6.2
- Git commit:   1f136c1
- Built:        Wed Jun 15 05:16:17 2016
- OS/Arch:      linux/amd64
+	```bash
+	labuser@v112node0:~$ docker version
+	Client:
+ 	Version:      1.12.0-rc1
+ 	API version:  1.24
+ 	Go version:   go1.6.2
+ 	Git commit:   1f136c1
+ 	Built:        Wed Jun 15 05:16:17 2016
+ 	OS/Arch:      linux/amd64
 
-Server:
- Version:      1.12.0-rc1
- API version:  1.24
- Go version:   go1.6.2
- Git commit:   1f136c1
- Built:        Wed Jun 15 05:16:17 2016
- OS/Arch:      linux/amd64
- ```
+	Server:
+ 	Version:      1.12.0-rc1
+ 	API version:  1.24
+ 	Go version:   go1.6.2
+ 	Git commit:   1f136c1
+ 	Built:        Wed Jun 15 05:16:17 2016
+ 	OS/Arch:      linux/amd64
+ 	```
  
 
-3. We are going to copy the contents of the application folder. Use `git` to clone the `cats` application from `https://github.com/mark-church/cats.git`
+3. We are going to copy the contents of the application code to **v112node0**. Use `git` to clone the `cats` application from `https://github.com/mark-church/cats.git`
 
-   ```bash
-   labuser@v112node0:~$ git clone https://github.com/mark-church/cats.git
-Cloning into 'cats'...
-remote: Counting objects: 10, done.
-remote: Compressing objects: 100% (6/6), done.
-remote: Total 10 (delta 0), reused 7 (delta 0), pack-reused 0
-Unpacking objects: 100% (10/10), done.
-Checking connectivity... done.
-   ```
-   The repo contains all of the files and code that is required to create a container image of the application. The command above copies (clones) the repo into a new directory on your machine called `cats`.
+   	```bash
+   	labuser@v112node0:~$ git clone https://github.com/mark-church/cats.git
+	Cloning into 'cats'...
+	remote: Counting objects: 10, done.
+	remote: Compressing objects: 100% (6/6), done.
+	remote: Total 10 (delta 0), reused 7 (delta 0), pack-reused 0
+	Unpacking objects: 100% (10/10), done.
+	Checking connectivity... done.
+   	```
+   	
+   	The repo contains all of the files and code that is required to create a container image of the application. The command above copies (clones) the repo into a new directory on your machine called `cats`.
 
-3. Change directory to `cats` and examine the list of files.
-```bash
-labuser@v112node0:~/$ cd cats
+3. Change directory to `cats` and examine the list of files with 'tree'.
+	```bash
+	labuser@v112node0:~/$ cd cats
 
-labuser@v112node0:~/cats/$ tree
-.
-├── app.py
-├── Dockerfile
-├── README.md
-├── requirements.txt
-└── templates
-    └── index.html
+	labuser@v112node0:~/cats/$ tree
+	.
+	├── app.py
+	├── Dockerfile
+	├── README.md
+	├── requirements.txt
+	└── templates
+    	└── index.html
 
-1 directory, 5 files
- ```
+	1 directory, 5 files
+ 	```
 
 
 Some of the files worth knowing include the following:
 
- -   __Dockerfile__: This file contains the recipe for the `cats` app.
+ -   __Dockerfile__: This file contains the recipe for the `cats` app image.
 
   - __app.py__: This is the main Python module that serves content.
 
@@ -122,7 +123,7 @@ Some of the files worth knowing include the following:
 
 You **Dockerize** an application by describing it in a **Dockerfile** and using that **Dockerfile** to create a Docker image.
 
-The following procedure will guide you through Dockerizing the web front-end portion of the `cats` app. 
+The following procedure will guide you through Dockerizing the the `cats` app. 
 
 Make sure you're logged in to **v112node0** and in the `~/cats/` directory.
 
