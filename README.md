@@ -29,14 +29,15 @@ In this step you will deploy a simple application that runs on a single Docker h
 
 - Clone the app's GitHub repo
 - Dockerize the app
-- Push the image to Docker Hub
 - Run the app
+- Push the image to Docker Hub
 
-The application you will deploy is the 'cats' application. It is a simple 1-container application that displays random pictures of cats, because why not! It is a flask written in Python that pulls the images from public URLs.
+
+The application you will deploy is the 'cats' application. It is a simple 1-container application that displays random pictures of cats, because why not!! It is a flask application written in Python that pulls the images from public URLs.
 
 ### Step 1.1 - Log into VMs and verify that Docker is running
 
-1. SSH to your __v112node0__ with the username of 'labuser'
+1. SSH to your __v112node0__ with the username of `labuser`. You should have the hostnames in an email titled "Docker Labs VMs Ready"
 
    The command to SSH into **v112node0** will look something like the following:
 
@@ -96,26 +97,29 @@ Welcome to Ubuntu 14.04.4 LTS (GNU/Linux 4.2.0-23-generic x86_64)
 	```bash
 	labuser@v112node0:~/$ cd cats
 
-	labuser@v112node0:~/cats/$ tree
+	labuser@v112node0:~/cats$ tree
 	.
 	├── app.py
 	├── Dockerfile
+	├── images
+	│   ├── browser.png
+	│   ├── cat.png
+	│   └── food.png
 	├── README.md
-	├── requirements.txt
 	└── templates
     	└── index.html
 
-	1 directory, 5 files
+	2 directories, 7 files
  	```
 
 
 Some of the files worth knowing include the following:
 
- -   __Dockerfile__: This file contains the recipe for the `cats` app image.
+ 	- __Dockerfile__: This file contains the recipe for the `cats` app image.
 
-  - __app.py__: This is the main Python module that serves content.
-
-   - **/app/templates**: This folder includes the HTML web page that is called by the Python web server.
+  	- __app.py__: This is the main Python module that is our Flask application.
+  	
+   	- **/app/templates**: This folder includes the HTML web page that is called by the Python web server.
 
    Let's focus on the **Dockerfile** for a second. A **Dockerfile** is a text file that contains all the **instructions** required to build an application or service into a Docker image. This includes instructions to install packages, copy data, insert metadata, and anything else that should be included as part of the image. The Docker Engine uses Dockerfiles to create new images.
 
@@ -132,7 +136,7 @@ Make sure you're logged in to **v112node0** and in the `~/cats/` directory.
 
 ```bash
 
-ubuntu@v112node0:~/cats/$ cat Dockerfile
+ubuntu@v112node0:~/cats$ cat Dockerfile
 FROM ubuntu:14.04
 
 RUN sudo apt-get update && apt-get -y install python-pip
@@ -152,34 +156,34 @@ CMD ["python", "./app.py"]
 
    __FROM__: The FROM instruction sets the base image that all subsequent instructions will build on top of. The base image can be any valid Docker image including other peoples' images. In this exercise you are starting with the `ubuntu:14.04` image as your base image.
 
-   __RUN__: The RUN instruction executes commands while the image is being built. Each RUN instruction creates a new image layer. The RUN instructions in this **Dockerfile** are updating the local `apt` package lists from source, installing some packages, creating a link, and running some `npm` commands.
+   __RUN__: The RUN instruction executes commands while the image is being built. Each RUN instruction creates a new image layer. The RUN instructions in this **Dockerfile** are updating the local `apt` package lists from source, and installing some packages that the Flask framework requires.
 
-   __ADD__: The ADD instruction copies files or directories from the Docker host and adds them to the filesystem of the container. In this particular **Dockerfile** the `app` directory that was just cloned to **v112node0** form GitHub is copied to the image at `/opt/flask-app`.
+   __ADD__: The ADD instruction copies files or directories from the Docker host and adds them to the filesystem of the container. In this particular **Dockerfile** the `app` directory that was just cloned to **v112node0** form GitHub is copied to the image at `/usr/bin`.
 
    __EXPOSE__: The EXPOSE instruction lists the ports that the container will expose at runtime. This image will expose port 5000.
 
    __CMD__: The main purpose of CMD instruction is to provide defaults for an executing container. This CMD instruction will run `python` specifying `./app.py` as the argument.
 
-5. Use the following `docker build` command to build an image from the Dockerfile.
+5. If you have not already signed up for a Docker Hub account please do so. Instructions are detailed in the preqresuites for this lab. Use the following `docker build` command to build an image from the Dockerfile.
 
    Be sure to substitute your own Docker ID in this example
 
    ```
-   labuser@v112node0:~/cats/$ docker build -t <your Docker ID>/cats .
+   labuser@v112node0:~/cats$ docker build -t <your Docker ID>/cats .
    ```
 
-   It may take a minute or two to build the image. This is because the `ubuntu:14.04` image has to be pulled locally, and several packages have to be installed into the image.
+   It will take between one and three minutes to build the image. This is because the `ubuntu:14.04` image has to be pulled locally and several packages have to be installed into the image.
 
    The `-t` flag lets you **tag** the image. The `<your-docker-id>/cats` will be the image tag - **Be sure to substitute your Docker ID**. Tagging the image lets you easily identify it as well as push to Docker Hub or other Docker Registries.
 
    The trailing period `.` tells the command to send your current working directory to the Docker daemon as the build context.  The **build context** is a fancy way of saying the Dockerfile and other files required to build the image.
 
-   The output of the `docker build` command will look similar to the following (some lines have been removed for brevity).
+   The output of the `docker build` command will look similar to the following (many lines have been removed for brevity).
 
-   >**Warning**: You will see text roll up the screen as packages are installed. This can take up to three minutes.
+   >**Warning**: You will see text roll up the screen as packages are installed. 
 
    	```
-   	labuser@v112node0:~/cats/$ docker build -t markchurch/cats .
+   	labuser@v112node0:~/cats$ docker build -t markchurch/cats .
 	Sending build context to Docker daemon 65.54 kB
 	Step 1 : FROM ubuntu:14.04
 	---> 8f1bd21bd25c
@@ -204,17 +208,18 @@ CMD ["python", "./app.py"]
 	Successfully built 0968ec22c14f
    ```
 
-   Your output will be a lot more verbose than this as it includes output from `apt-get` and `pip`.
+   Your output will be a lot more verbose than this as it includes output from `apt-get` and `pip`. Each line in the Dockerfile is creating a new container, installing the packages inside that container, and then commiting that container to a new image. The final step gives us the final image for this application.
 
 6. Run a `docker images` command to confirm that the image is listed.
 
    ```
-  	labuser@v112node0:~/cats/$ docker images
-	REPOSITORY                             TAG                 	IMAGE ID            CREATED             SIZE
-	markchurch/cats                        latest              0968ec22c14f        7 minutes ago       362 MB
+  	labuser@v112node0:~/cats$ docker images
+	REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+	markchurch/cats     latest              6991f312ee28        7 seconds ago       363.5 MB
+	ubuntu              14.04               8f1bd21bd25c        3 weeks ago         188 MB
    ```
 
-   The output of your command will show your Docker ID and not *markchurch*. You will also see the `ubuntu:14.04` image listed.
+   The output of your command will show your Docker ID and not *markchurch*. Since we doewnloaded the `ubuntu:14.04` image as an intermediary step we can see that that image has been downloaded too.
    
    
 ### Step 1.3 - Run the App
@@ -227,24 +232,24 @@ Perform all of these steps from **v112node0**.
 1. Execute a `docker run` command to deploy a container with the `<your Docker ID>/cats` image.
 
    ```
-   labuser@v112node0:~/cats/$ docker run -d --name cats-app -p 8000:5000 markchurch/cats
+   labuser@v112node0:~/cats$ docker run -d --name cats-app -p 8000:5000 markchurch/cats
    0374e0c107b4e84d4201415d1ad5dd036787ea317c8baa2062615f1f9e0b334e
    ```
 
-   This will create a container with the `cats` image. It will run in the background because of the `-d` flag. We are exposing the container on port `8000` of the host and mapping this to port `5000` inside the container. 
+   This will create a container with the `cats` image. It will run in the background because of the `-d` flag. We are exposing the container on port `8000` of the host and mapping this to port `5000` inside the container. The container ID of the container is given as a message confirming that the container has been created from our image.
    
    
 
 
-2. Check that the container is running.
+2. Check that the container is running with `docker ps`.
 
-   ```
-   labuser@v112node0:~/cats/$ docker ps
+   	```
+   	labuser@v112node0:~/cats$ docker ps
 	CONTAINER ID        IMAGE                 COMMAND             CREATED             STATUS              PORTS                    NAMES
 	0374e0c107b4        markchurch/cats   "python ./app.py"   5 minutes ago       Up 5 minutes        0.0.0.0:8000->5000/tcp   cats-app
-   ```
-
-  
+   	```
+	This output shows us the container ID, the image used to build the container, the status of the container, and also the port-mapping between the container interface and the host interface. This confirms that our container is running.
+  	
 
 5. Point your web browser to the app.
 
@@ -266,14 +271,14 @@ Perform all of these steps from **v112node0**.
 
 ### Step 1.4 - Push the image to Docker Hub
 
-In this section you will push the newly created image to Docker Hub so that you can pull it form other nodes.  
+Now that we have verified that our application works we will push the newly created image to Docker Hub so that you can pull it form other nodes.  
 
 Perform the following steps from **v112node0**.
 
 1. Login with your Docker ID.
 
-   ```
-   labuser@v112node0:~/cats/$ docker login
+   ```bash
+   labuser@v112node0:~/cats$ docker login
    Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
    Username: <your-docker-id>
    Password:
@@ -284,33 +289,44 @@ Perform the following steps from **v112node0**.
 
    Remember to substitute your Docker ID.
 
-   ```
-   labuser@v112node0:~/FoodTrucks/$ docker push markchurch/cats
+   	```bash
+   	labuser@v112node0:~/cats$ docker push markchurch/cats
 	The push refers to a repository [docker.io/markchurch/cats]
-	721e9583ca1f: Layer already exists
-	244ad48a1cde: Layer already exists
-	3ce05adaea0d: Layer already exists
-	5f70bf18a086: Layer already exists
-	6f8be37bd578: Layer already exists
-	9f7ab087e6e6: Layer already exists
-	dc109d4b4ccf: Layer already exists
-	a7e1c363defb: Layer already exists
-	1.0: digest: sha256:f15f6669512e296af2e135b26c49a356cf5e7e3754cb1b1929f955f7f8a300f5 size: 1968
-   ```
+	eeba1e237f53: Pushed
+	faf8ac200bcd: Pushed
+	2c00ae9664da: Pushed
+	5f70bf18a086: Mounted from library/ubuntu
+	6f8be37bd578: Mounted from library/ubuntu
+	9f7ab087e6e6: Mounted from library/ubuntu
+	dc109d4b4ccf: Mounted from library/ubuntu
+	a7e1c363defb: Mounted from library/ubuntu
+	latest: digest: sha256:5fdee62784552531475c02afff4cdcc12f95a050dbdd4bce53da7ee3d589d582 size: 1992
+   	```
 
    This will push your newly built image to your own public repository on Docker Hub called `<your-docker-id>/cats`. The Docker Hub is the default Docker Registry and is hosted on the public internet. You can also push images to Docker Trusted Registry as well as third party registries.
+   
+   If you go to `hub.docker.com` and login then you will be able to see the repository and image tag that you just created.
+   
+   <p align="center">
+   <img src="images/hub.png" width=600px>
+   </p>
 
 Before proceeding to the next task, clear all of the containers on __v112node0__ by running the following command.
 
-	```
-	labuser@v112node0:~/cats/$ docker rm -f $(docker ps -q)
-	```
+	
+	labuser@v112node0:~/cats$ docker rm -f $(docker ps -q)
+	385f1c7a587c
+	
 
 Verify that the command worked and there are no running or stopped containers on the host.
 
-	```
-	labuser@v112node0:~/cats/$ docker ps
-	```
+
+	labuser@v112node0:~/cats$ docker ps
+	CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+	labuser@v112node0:~/cats$
+	
+	
+Now if you refresh your web browser with your application you will see that it is no longer running. 
 
 ## <a name="start-cluster"></a>Step 2: Configure Swarm Mode
 
@@ -325,11 +341,13 @@ You will complete the following:
 - Scale the app
 - Drain nodes for maintenance and reschedule containers
 
-For the remainder of this lab we will refer to *Swarm Mode (native Docker clustering)* as ***Swarm mode***. The collection of Docker engines configured for Swarm mode will be referred to as the *swarm*.
+For the remainder of this lab we will refer to *Docker native clustering* as ***Swarm mode***. The collection of Docker engines configured for Swarm mode will be referred to as the *swarm*.
 
 A swarm comprises one or more *Manager Nodes* and one or more *Worker Nodes*. The manager nodes maintain the state of swarm and schedule appication containers. The worker nodes run the application containers. As of Docker 1.12, no external backend, or 3rd party components, are required for a fully functioning swarm - everything is built-in!
 
 In this part of the demo you will use all three of the nodes in your lab. __v112node0__ will be the Swarm manager, while __v112node1__ and __v112node2__ will be worker nodes. Swarm mode supports a highly available redundant manager nodes, but for the purposes of this lab you will only deploy a single manager node.
+
+*If you are just joining us on this step then feel free to use the `markchurch/cats` image from the Docker Hub for the rest of the lab*
 
 #### Step 2.1 - Create a Manager node
 
@@ -338,7 +356,7 @@ In this part of the demo you will use all three of the nodes in your lab. __v112
    For example (remember to substitute your SSH key and **v112node0** for your lab):
 
    ```
-   $ ssh labuser@v112node1-9128f1906df54acda5044f56a1a86b07-2.cloudapp.net
+   $ ssh labuser@v112node0-9a7b5b024cf247fb8d851bf173c72619-4.cloudapp.net
    ```
 
 2. Get the internal/private IP address of __v112node0__.
@@ -350,7 +368,7 @@ In this part of the demo you will use all three of the nodes in your lab. __v112
 
    Make a note of this IP address as you will use it later when adding worker nodes to the swarm.
 
-3. Create a Manager node on __v112node0__ using its internal IP address.
+3. Create a Manager node on __v112node0__ using its internal IP address and `docker swarm init --listen-addr <IP address>:<port>. This is the address the the swarm manager is advertising itself on to other nodes wishing to joing the swarm.
 
    Remember to substitute the IP address for the private IP of your **v112node0**.
 
@@ -385,7 +403,7 @@ You will perform the following procedure on **v112node1** and **v112node2**. Tow
 1. Open a new SSH session to __v112node1__ (Keep your SSH session to **v112node0** open in another tab or window).
 
 
-   ```
+   ```bash
    $ ssh labuser@v112node1-9128f1906df54acda5044f56a1a86b07-2.cloudapp.net
    ```
 
@@ -401,8 +419,8 @@ You will perform the following procedure on **v112node1** and **v112node2**. Tow
 
    Be sure to substitute the internal IP address of your **v112node0** that you made a note of earlier.
 
-   ```
-   ubuntu@v112node1:~/$ docker swarm join 10.0.0.11:2377
+   ```bash
+   labuser@v112node1:~/$ docker swarm join 10.0.0.11:2377
    This node joined a Swarm as a worker.
    ```
 
@@ -412,12 +430,12 @@ You will perform the following procedure on **v112node1** and **v112node2**. Tow
 
    Run this command on **v112node0** (the Manager node).
 
-   ```
-   ubuntu@v112node0:~/$ docker node ls
-   ID               NAME            MEMBERSHIP  STATUS  AVAILABILITY  MANAGER STATUS  LEADER
-   0gohc21qtm7sp *  node-0          Accepted    Ready   Active        Reachable       Yes
-   0v3wh1gbomf8y    node-1          Accepted    Ready   Active
-   151wlv08pt7aq    node-2          Accepted    Ready   Active
+   ```bash
+   labuser@v112node0:~/$ docker node ls
+	ID                           NAME                                          MEMBERSHIP  STATUS  AVAILABILITY  MANAGER    STATUS  LEADER
+	5zkcnyq6uqxv4sfpzsyvs8x3s    v112node1-9128f1906df54acda5044f56a1a86b07-2  Accepted    Ready   Active
+	acu262y2ight8uyn6fg8yvust *  v112node0-9128f1906df54acda5044f56a1a86b07-2  Accepted    Ready   Active        Reachable       Yes
+	brr8ri58aa1ed9051drszoyh0    v112node2-9128f1906df54acda5044f56a1a86b07-2  Accepted    Ready   Active
    ```
 
    The `docker node ls` command shows you all of the nodes that are in the swarm as well as their roles in the swarm. The `*` identifies the node that you are issuing the command from.
@@ -435,16 +453,16 @@ You will perform the following procedure from **v112node0**.
 
 ### Step 3.1 - Create a new overlay network for the application
 
-1. Create a new overlay network called `catnet`.
+1. Create a new overlay network called `catnet`. `catnet` will be the overlay network that our application containers live on.
 
    ```
    labuser@v112node0:~/$ docker network create -d overlay catnet
    81pjggkd57fbbl7zmheasc6m8
    ```
 
-   The `-d` flag let's you specify which network driver to use. In this example you are telling Docker to create a new network using the **overlay** driver. In *Swarm Mode* the overlay network does not require an external key-value store. It is integrated into the en
+   The network ID will be output to signal the succesful creation of a Docker network. The `-d` flag let's you specify which network driver to use. In this example you are telling Docker to create a new network using the **overlay** driver. In *Swarm Mode* the overlay network does not require an external key-value store. It is integrated into the engine. The overlay provides reachability between the hosts across the underlay network. Out of the box containers on the same overlay network will be able to ping eachother without any other special configuration.
 
-2. Confirm that the network was created and inspect its configuration.
+2. Confirm that the network was created. We can see that there are several other default networks that already exist in a Docker host.
 
    ```
    labuser@v112node0:~/$ docker network ls
@@ -461,15 +479,16 @@ Now that the container network is created you are ready to deploy the applicatio
 
 #### Step 3.2 - Deploy the application components as Docker services
 
-*Services* are a new concept in Docker 1.12. They work with swarms and are intended for long-running containers based on identical images.
+Your `cats` application is becoming very popular on the internet. People just love pictures of cats. You are going to have to scale your application to meet peak demand. You will have to do this across multiple hosts for high availability. We will use the concept of *Services* to scale our application easily and manage many containers as a single entity.
 
-Your `cats` application is becoming very popular on the internet. People just love pictures of cats. You are going to have to scale your application to meet peak demand. You will have to do this across multiple hosts for high availability.
+*Services* are a new concept in Docker 1.12. They work with swarms and are intended for long-running containers.
+
 
 You will perform this procedure from **v112node0**.
 
-1. Deploy `cats` as a *Service*. Remember to use your Docker ID instead of `markchurch`
+1. Deploy `cats` as a *Service*. Remember to use your `<Docker ID>` instead of `markchurch`. However, if you did not complete Part 1 of this lab you are welcome to use `markchurch/cats` as the application image as that will work as well.
 
-   ```
+   ```bash
    labuser@v112node0:~/$ docker service create --name cat-app --network catnet -p 8000:5000 markchurch/cats
 5qwkfpdpsm72opbxvzgzk9s5q
    ```
@@ -483,7 +502,7 @@ You will perform this procedure from **v112node0**.
 	5qwkfpdpsm72  cat-app  1      markchurch/cats
    ```
 
-3. We can insepct the progress of our individual service containers by using the `docker service tasks` command. 
+3. We can insepct the progress of our individual service containers by using the `docker service tasks` command. It may take a minute or two until the `LAST STATE` column is in the `Running` status.
 
 	```
 	labuser@v112node0:~/$ docker service tasks cat-app
@@ -493,37 +512,34 @@ You will perform this procedure from **v112node0**.
 	
 The state of the service may change a couple times until it is running. The image is being downloaded from your Docker Hub repository directly to the other engines in the Swarm. Once the image is downloaded the container goes into a running state on one of the three nodes.
 
-4. Inspect each service more closely.
+At this point it may not seem that we have done anything very differently than in part 1. We have again deployed a single container on a host and mapped it to port `8000`. The difference here is that the container has been scheduled on a swarm cluster.  The application is available on port `8000` on any of the hosts in the cluster even though the `cat-app` container is just running on a single host. The Swarm intelligently routes routes requests to the `cat-app`.
 
-   You can look more closely at each service with the following commands:
+4. Check that the app is running in your browser. You can use any of the node URLs. The Swarm will advertise the published port on every host in the cluster.
 
-   - `docker service inspect <service-name-or-service-id>`
-   - `docker service tasks <service-name-or-service-id>`
-
-6. Check that the app is running in your browser. You can use any of the node URLs. The Swarm will advertise the published port on every host in the cluster.
-
-   Point your web browser to `http://<v112node0-public-ip>:8000` You should see the cat-app. Now try pointing your web browser to one of the other nodes on port `8000`. You should see the same cat-app being served by the same container. Your request is being routed by the Docker engine from any Swarm node to the correct node.
+   Point your web browser to `http://<v112node0-public-ip>:8000`. Now try pointing it to `http://<v112node1-public-ip>:8000`. You should see the same `cat-app` being served by the same container ID in both cases. Your request is being routed by the Docker engine from any Swarm node to the correct node. (The picture will change but the container ID confirms to us that the same container is being hit every time.)
 
 Well done. You have deployed the cat-app to your new Swarm using Docker services. 
 
 #### Step 3.3 - Scale the app
 
+Demand is crazy! Everybody loves your `cats` app! It's time to scale out.
+
 One of the great things about *services* is that you can scale them up and down to meet demand. In this step you'll scale the web front-end service up and then back down.
 
 You will perform the following procedure from **v112node0**.
 
-1. Scale the number of containers in the **web** service to 5.
+1. Scale the number of containers in the **web** service to 7 with the `docker service update --replicas` command. `replicas` is the term we use to describe identical containers providing the same service.
 
-   ```
-   ubuntu@v112node0:~/$ docker service update --replicas 7 cat-app
+   ```bash
+   labuser@v112node0:~/$ docker service update --replicas 7 cat-app
    cat-app
    ```
-	The Swarm manager schedules so that there are 5 `cat-app` containers in the cluster. These will be scheduled evenly across the Swarm members.
+	The Swarm manager schedules so that there are 7 `cat-app` containers in the cluster. These will be scheduled evenly across the Swarm members.
 
 2. We are going to use the `docker service tasks` command again but pair it with the `watch` command so we can see the containers come up in real time
 
-   ```
-   ubuntu@v112node0:~/$ watch docker service tasks cat-app
+   ```bash
+   labuser@v112node0:~/$ watch docker service tasks cat-app
    Every 2.0s: docker service tasks cat-app                                                                                                                                            Sat Jun 18 21:28:01 2016
 
 ID                         NAME       SERVICE  IMAGE            LAST STATE          DESIRED STATE  NODE
@@ -537,16 +553,16 @@ ehfg9vq9m8bgyrxyv0abrex8c  cat-app.1  cat-app  markchurch/cats  Running 17 minut
 
 	```
 
-   Notice that there are now 5 containers listed. It may take a few seconds for the new containers in the service to all show as **RUNNING**. Now press `CTRL-C` and it will take you out of the `watch` screen.
+   Notice that there are now 7 containers listed. It may take a few seconds for the new containers in the service to all show as **RUNNING**.  The `NODE` column tells us on which node a container is running. After all the containers are in `RUNNING` state press `CTRL-C` and it will take you out of the `watch` screen.
 
 3. Confirm the scaling operation and container load-balancing from a web browser.
 
-   Point your web browser to `http://<any-node-ip>` and hit the `refresh` button a few times. You will see the container ID changing. This is because the swarm is automatically load balancing across all five containers. You can send a request to any Swarm member and you will hit any container in the service
+   Point your web browser to `http://<any-node-ip>:8000` and hit the refresh button a few times. You will see the container ID changing. This is because the swarm is automatically load balancing across all seven containers. You can send a request to any Swarm member and you will hit any container in the service.
 
-4. Scale the service back down just five containers.
+4. Scale the service back down just five containers again with the `docker service update --replicas` command. 
 
-   ```
-   ubuntu@v112node0:~/$ docker service update --scale 5 cat-app
+   ```bash
+   labuser@v112node0:~/$ docker service update --replicas 5 cat-app
    web
    ```
 
@@ -556,7 +572,7 @@ You have successfully scaled a swarm service up and down.
 
 #### Step 3.4 - Bring a node down for maintenance.
 
-Your cat-app has been doing amazing. It's number 1 on the Apple Store! You have scaled up during the holidays and down during the slow season. Now you are doing maintenance on one of your servers so you will need to gracefully 
+Your cat-app has been doing amazing. It's number 1 on the Apple Store! You have scaled up during the holidays and down during the slow season. Now you are doing maintenance on one of your servers so you will need to gracefully take a server out of the swarm without interrupting service to your customers.
 
 
 1. Take a look at the status of your nodes again so you can get the node names for step 2.  
@@ -582,16 +598,16 @@ Your cat-app has been doing amazing. It's number 1 on the Apple Store! You have 
 
    You can see that we have two of the cat-app containers running here.
 
-3. Now let's SSH back in to node0 (the Swarm manager) and take node2 out of service.
+3. Now let's SSH back in to node0 (the Swarm manager) and take node2 out of service. You will insert your node ID of node 2 that you got in step 1.
 
    ```
-   labuser@v112node2:~/$ docker node update --availability drain v112node2-9128f1906df54acda5044f56a1a86b07-2
+   labuser@v112node0:~/$ docker node update --availability drain v112node2-9128f1906df54acda5044f56a1a86b07-2
 	v112node2-9128f1906df54acda5044f56a1a86b07-2
 
    ```
 4. Check the status of the nodes
 
-	```
+	```bash
 	labuser@v112node0:~/$ docker node ls
 	ID                           NAME                                          MEMBERSHIP  STATUS  AVAILABILITY  MANAGER 	STATUS  LEADER
 	5zkcnyq6uqxv4sfpzsyvs8x3s    v112node1-9128f1906df54acda5044f56a1a86b07-2  Accepted    Ready   Active
@@ -603,18 +619,18 @@ Your cat-app has been doing amazing. It's number 1 on the Apple Store! You have 
 
 5. Switch back to node2 and see what is running there.
 
-	```
+	```bash
 	labuser@v112node2:~/$ docker ps
 	CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 	labuser@v112node2:~/$
-
+	```
 
    **node-2** does not have any containers running on it.
 
-6. Lastly, check the service again to make sure that the container were rescheduled.
+6. Lastly, check the service again on node 0 to make sure that the container were rescheduled. You should see all five containers running on the remaining two nodes.
 
-```
-docker service tasks cat-app
+	```bash
+   labuser@v112node0:~/$ docker service tasks cat-app
 ID                         NAME       SERVICE  IMAGE            LAST STATE          DESIRED STATE  NODE
 2g4z7c7ykbdgbrbpt3kgekdrc  cat-app.2  cat-app  markchurch/cats  Running 10 minutes  Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
 79cil3duim38z68troik84bwn  cat-app.3  cat-app  markchurch/cats  Running 4 minutes   Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
@@ -623,6 +639,6 @@ ID                         NAME       SERVICE  IMAGE            LAST STATE      
 4bx4v9t7c9ujifusj3vd6nq10  cat-app.6  cat-app  markchurch/cats  Running 10 minutes  Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
 ```
 
-
+7. Lastly, go back to your browser and verify after that everything is running fine after our maintenance operation.
 
 Congratulations! You've completed this lab. You now know how to build a swarm, deploy applications as collections of services, and scale individual services up and down.
