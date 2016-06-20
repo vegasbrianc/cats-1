@@ -115,11 +115,11 @@ Welcome to Ubuntu 14.04.4 LTS (GNU/Linux 4.2.0-23-generic x86_64)
 
 Some of the files worth knowing include the following:
 
- 	- __Dockerfile__: This file contains the recipe for the `cats` app image.
+- __Dockerfile__: This file contains the recipe for the `cats` app image.
 
-  	- __app.py__: This is the main Python module that is our Flask application.
+- __app.py__: This is the main Python module that is our Flask application.
   	
-   	- **/app/templates**: This folder includes the HTML web page that is called by the Python web server.
+- **/app/templates**: This folder includes the HTML web page that is called by the Python web server.
 
    Let's focus on the **Dockerfile** for a second. A **Dockerfile** is a text file that contains all the **instructions** required to build an application or service into a Docker image. This includes instructions to install packages, copy data, insert metadata, and anything else that should be included as part of the image. The Docker Engine uses Dockerfiles to create new images.
 
@@ -134,23 +134,23 @@ Make sure you're logged in to **v112node0** and in the `~/cats/` directory.
 
 1. Inspect the contents of the Dockerfile.
 
-```bash
+	```bash
 
-ubuntu@v112node0:~/cats$ cat Dockerfile
-FROM ubuntu:14.04
+	ubuntu@v112node0:~/cats$ cat Dockerfile
+	FROM ubuntu:14.04
 
-RUN sudo apt-get update && apt-get -y install python-pip
+	RUN sudo apt-get update && apt-get -y install python-pip
 
-RUN sudo pip install flask==0.10.1
+	RUN sudo pip install flask==0.10.1
 
-COPY . /usr/bin
+	COPY . /usr/bin
 
-WORKDIR /usr/bin
+	WORKDIR /usr/bin
 
-EXPOSE 5000
+	EXPOSE 5000
 
-CMD ["python", "./app.py"]
-```
+	CMD ["python", "./app.py"]
+	```
 
    Let's have a quick look at the contents of the Dockerfile.
 
@@ -164,7 +164,7 @@ CMD ["python", "./app.py"]
 
    __CMD__: The main purpose of CMD instruction is to provide defaults for an executing container. This CMD instruction will run `python` specifying `./app.py` as the argument.
 
-5. If you have not already signed up for a Docker Hub account please do so. Instructions are detailed in the preqresuites for this lab. Use the following `docker build` command to build an image from the Dockerfile.
+2. If you have not already signed up for a Docker Hub account please do so. Instructions are detailed in the preqresuites for this lab. Use the following `docker build` command to build an image from the Dockerfile.
 
    Be sure to substitute your own Docker ID in this example
 
@@ -210,7 +210,7 @@ CMD ["python", "./app.py"]
 
    Your output will be a lot more verbose than this as it includes output from `apt-get` and `pip`. Each line in the Dockerfile is creating a new container, installing the packages inside that container, and then commiting that container to a new image. The final step gives us the final image for this application.
 
-6. Run a `docker images` command to confirm that the image is listed.
+3. Run a `docker images` command to confirm that the image is listed.
 
    ```
   	labuser@v112node0:~/cats$ docker images
@@ -251,7 +251,7 @@ Perform all of these steps from **v112node0**.
 	This output shows us the container ID, the image used to build the container, the status of the container, and also the port-mapping between the container interface and the host interface. This confirms that our container is running.
   	
 
-5. Point your web browser to the app.
+3. Point your web browser to the app.
 
    Paste the public DNS or public IP of **v112node0** into your web browser with port `8000`.
    <p align="center">
@@ -442,7 +442,7 @@ You will perform the following procedure on **v112node1** and **v112node2**. Tow
 
 Congratulations. You have configured a swarm with one manager node and two worker nodes.
 
-## <a name="multi-application"></a>Step 3: Deploy a Multi-Service, Multi-Host Application
+## <a name="multi-application"></a>Step 3: Deploy a Multi-Host Application
 
 Now that you have a swarm up and running, it is time to deploy the app to it.  To do this you will complete the following actions:
 
@@ -510,9 +510,9 @@ You will perform this procedure from **v112node0**.
 	ehfg9vq9m8bgyrxyv0abrex8c  cat-app.1  cat-app  markchurch/cats  Running 5 minutes  Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
 	```
 	
-The state of the service may change a couple times until it is running. The image is being downloaded from your Docker Hub repository directly to the other engines in the Swarm. Once the image is downloaded the container goes into a running state on one of the three nodes.
+	The state of the service may change a couple times until it is running. The image is being downloaded from your Docker Hub repository directly to the other engines in the Swarm. Once the image is downloaded the container goes into a running state on one of the three nodes.
 
-At this point it may not seem that we have done anything very differently than in part 1. We have again deployed a single container on a host and mapped it to port `8000`. The difference here is that the container has been scheduled on a swarm cluster.  The application is available on port `8000` on any of the hosts in the cluster even though the `cat-app` container is just running on a single host. The Swarm intelligently routes routes requests to the `cat-app`.
+	At this point it may not seem that we have done anything very differently than in part 1. We have again deployed a single container on a host and mapped it to port `8000`. The difference here is that the container has been scheduled on a swarm cluster.  The application is available on port `8000` on any of the hosts in the cluster even though the `cat-app` container is just running on a single host. The Swarm intelligently routes routes requests to the `cat-app`.
 
 4. Check that the app is running in your browser. You can use any of the node URLs. The Swarm will advertise the published port on every host in the cluster.
 
@@ -542,14 +542,14 @@ You will perform the following procedure from **v112node0**.
    labuser@v112node0:~/$ watch docker service tasks cat-app
    Every 2.0s: docker service tasks cat-app                                                                                                                                            Sat Jun 18 21:28:01 2016
 
-ID                         NAME       SERVICE  IMAGE            LAST STATE          DESIRED STATE  NODE
-ehfg9vq9m8bgyrxyv0abrex8c  cat-app.1  cat-app  markchurch/cats  Running 17 minutes  Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
-868i4miwqutkla8oih3tvrifi  cat-app.2  cat-app  markchurch/cats  Running 2 minutes   Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
-1dahwhg1ma3oy2wgchlfof4ad  cat-app.3  cat-app  markchurch/cats  Running 2 minutes   Running        v112node2-9128f1906df54acda5044f56a1a86b07-2
-3hiymz9dbna33gyzevmrcqq6s  cat-app.4  cat-app  markchurch/cats  Running 2 minutes   Running        v112node2-9128f1906df54acda5044f56a1a86b07-2
-01s73ggiaub4om2d4u4wkl1cb  cat-app.5  cat-app  markchurch/cats  Running 2 minutes   Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
-4bx4v9t7c9ujifusj3vd6nq10  cat-app.6  cat-app  markchurch/cats  Running About a minute  Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
-7s57r3capvz77rp5ejhalbov5  cat-app.7  cat-app  markchurch/cats  Running About a minute  Running        v112node2-9128f1906df54acda5044f56a1a86b07-2   
+	ID                         NAME       SERVICE  IMAGE            LAST STATE          DESIRED STATE  NODE
+	ehfg9vq9m8bgyrxyv0abrex8c  cat-app.1  cat-app  markchurch/cats  Running 17 minutes  Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
+	868i4miwqutkla8oih3tvrifi  cat-app.2  cat-app  markchurch/cats  Running 2 minutes   Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
+	1dahwhg1ma3oy2wgchlfof4ad  cat-app.3  cat-app  markchurch/cats  Running 2 minutes   Running        v112node2-9128f1906df54acda5044f56a1a86b07-2
+	3hiymz9dbna33gyzevmrcqq6s  cat-app.4  cat-app  markchurch/cats  Running 2 minutes   Running        v112node2-9128f1906df54acda5044f56a1a86b07-2
+	01s73ggiaub4om2d4u4wkl1cb  cat-app.5  cat-app  markchurch/cats  Running 2 minutes   Running        v112node0-9128f1906df54acda5044f56a1a86b07-2
+	4bx4v9t7c9ujifusj3vd6nq10  cat-app.6  cat-app  markchurch/cats  Running About a minute  Running        v112node1-9128f1906df54acda5044f56a1a86b07-2
+	7s57r3capvz77rp5ejhalbov5  cat-app.7  cat-app  markchurch/cats  Running About a minute  Running        v112node2-9128f1906df54acda5044f56a1a86b07-2   
 
 	```
 
