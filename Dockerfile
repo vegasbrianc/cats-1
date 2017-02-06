@@ -1,8 +1,6 @@
-FROM ubuntu:14.04
+FROM python:3.5-alpine
 
-RUN sudo apt-get update && apt-get -y install python-pip
-
-RUN sudo pip install flask==0.10.1
+RUN pip install flask==0.10.1
 
 COPY . /usr/bin
 
